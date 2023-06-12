@@ -3,10 +3,12 @@ import { useDispatch } from 'react-redux';
 
 import PlayPause from './PlayPause';
 import { playPause, setActiveSong } from '../redux/features/playerSlice';
+import { useGetSongDetailsQuery } from '../redux/services/shazamCode';
+import { useState } from 'react';
 
 const SongCard = ({ song, isPlaying, activeSong, data, index }) => {
   const dispatch = useDispatch();
-
+  const { data: songData } = useGetSongDetailsQuery(song?.key);
   const handlePauseClick = () => {
     dispatch(playPause(false));
   };
@@ -33,14 +35,14 @@ const SongCard = ({ song, isPlaying, activeSong, data, index }) => {
             handlePlay={handlePlayClick}
           />
         </div>
-        <img alt="song img" />
+        <img alt="song img" src={songData?.images.coverart} />
       </div>
       <div className="mt-4 flex flex-col">
         <p className="font-semibold text-white text-lg truncate">
           <Link to={`/songs/${song?.key}`}>{song.title}</Link>
         </p>
         <p className="mt-1 text-gray-300 text-sm truncate">
-          <Link to="/top-artists">{song.subtitle}</Link>
+          <Link to={`/artists/${songData?.artists[0].adamid}`}>{song.subtitle}</Link>
         </p>
       </div>
     </div>
