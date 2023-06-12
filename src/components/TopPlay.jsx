@@ -1,17 +1,18 @@
 import { useEffect, useRef } from 'react';
-import Logo from '../assets/logo.svg';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode } from 'swiper';
+// eslint-disable-next-line import/no-unresolved
+import 'swiper/css';
+// eslint-disable-next-line import/no-unresolved
+import 'swiper/css/free-mode';
 
 import PlayPause from './PlayPause';
 import { playPause, setActiveSong } from '../redux/features/playerSlice';
 
-import { useGetTopChartsQuery } from '../redux/services/shazamCode';
-
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { FreeMode } from 'swiper';
-import 'swiper/css';
-import 'swiper/css/free-mode';
+import { useGetSongDetailsQuery, useGetTopChartsQuery } from '../redux/services/shazamCode';
 
 const TopChartCard = ({
   song,
@@ -20,23 +21,33 @@ const TopChartCard = ({
   activeSong,
   handlePlayClick,
   handlePauseClick,
-}) => (
-  <div className="w-full flex flex-row items-center hover:bg-[#4c426e] py-2 p-4 rounded-lg cursor-pointer mb-2">
-    <h3 className="font-bold text-base text-white mr-3 ">{index + 1}</h3>
-    <div className="flex-1 flex flex-row justify-between items-center">
-      <img className="w-20 h-20 rounded-lg " src={Logo} alt="song" />
-      <div className="flex-1 flex flex-col justify-center mx-4">
-        <Link to={`/songs/${song.key}`}>
-          <p className="text-xl font-bold text-white">{song?.title}</p>
-        </Link>
-        <Link to={`/artist/${song.artist_id}`}>
-          <p className="text-base text-gray-300 mt-1 font-bold">{song?.subtitle}</p>
-        </Link>
+}) => {
+  const { data: songData } = useGetSongDetailsQuery(song?.key);
+
+  return (
+    <div className="w-full flex flex-row items-center hover:bg-[#4c426e] py-2 p-4 rounded-lg cursor-pointer mb-2">
+      <h3 className="font-bold text-base text-white mr-3 ">{index + 1}</h3>
+      <div className="flex-1 flex flex-row justify-between items-center">
+        <img className="w-20 h-20 rounded-lg " src={songData?.images.coverart} alt="song" />
+        <div className="flex-1 flex flex-col justify-center mx-4">
+          <Link to={`/songs/${song.key}`}>
+            <p className="text-xl font-bold text-white">{song?.title}</p>
+          </Link>
+          <Link to={`/artists/${songData?.artists[0]?.adamid}`}>
+            <p className="text-base text-gray-300 mt-1 font-bold">{song?.subtitle}</p>
+          </Link>
+        </div>
       </div>
+      <PlayPause
+        isPlaying={isPlaying}
+        activeSong={activeSong}
+        handlePause={handlePauseClick}
+        handlePlay={handlePlayClick}
+        song={song}
+      />
     </div>
-    <PlayPause isPlaying={isPlaying} activeSong={activeSong} handlePause={handlePauseClick} handlePlay={handlePlayClick} song={song} />
-  </div>
-);
+  );
+};
 
 const TopPlay = () => {
   const dispatch = useDispatch();
@@ -45,6 +56,17 @@ const TopPlay = () => {
   const divRef = useRef(null);
 
   const topPlays = data?.slice(0, 5);
+
+  // topPlays?.map((place) => {
+  //   const { data: placeData } = useGetSongDetailsQuery(place?.key);
+  //   if (!place.artistimg) {
+  //     place.artistImage = 'img';
+  //   }
+  //   console.log(place);
+  //   return { ...place, artistImage: placeData?.images.background };
+  // });
+
+  // console.log(topPlays[0].key, 'sonmg key');
 
   const handlePauseClick = () => {
     dispatch(playPause(false));
@@ -107,10 +129,10 @@ const TopPlay = () => {
               style={{ width: '25%', height: 'auto' }}
               className="shadow-lg rounded-full animate-slideright"
             >
-              <Link to={`/artist/${song.artist_id}`}>
+              <Link to={`/artists/${song.artist_id}`}>
                 <img
                   // src={song?.images?.background}
-                  src={Logo}
+                  src={song.artistImage}
                   alt="artist"
                   className="rounded-full object-cover"
                 />
